@@ -3,6 +3,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 import requests
 import os
+import datetime
 
 import nana
 
@@ -11,6 +12,8 @@ load_dotenv(dotenv_path)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
+NOTICE_CHANNEL_ID = int(os.environ.get("NOTICE_CHANNEL_ID"))
+DIFF_JST_FROM_UTC = 9
 
 class BotMain(commands.Bot):
     def __init__(self, command_prefix, **options):
@@ -18,6 +21,19 @@ class BotMain(commands.Bot):
 
     async def on_ready(self):
         print('on ready.')
+
+    async def on_voice_state_update(self, member, before, after):
+        channel = bot.get_channel(NOTICE_CHANNEL_ID)
+        if before.channel.guild is channel.guild:
+        # 通知チャンネルと同じサーバーにのみ反応させる
+          now = datetime.datetime.utcnow() + datetime.timedelta(hours=DIFF_JST_FROM_UTC)
+          now_str = now.strftime('%Y-%m-%d %H:%M:%S')
+          if before.channel is None and after.channel:
+              await channel.send(f'{now_str} - {member.name} が{after.channel.name} に参加したよ。')
+          elif after.channel is None and before.channel:
+              await channel.send(f'{now_str} - {member.name} が{before.channel.name} から出たよ。')
+          elif after.channel is not before.channel:
+              await channel.send(f'{now_str} - {member.name} が{before.channel.name} から {after.channel.name}に移動したよ。')
 
 
 bot = BotMain(['!', '！'])
