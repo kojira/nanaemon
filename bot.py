@@ -24,7 +24,8 @@ class BotMain(commands.Bot):
 
     async def on_voice_state_update(self, member, before, after):
         channel = bot.get_channel(NOTICE_CHANNEL_ID)
-        if before.channel.guild is channel.guild:
+        guild = before.channel.guild if after.channel is None else after.channel.guild
+        if guild is channel.guild:
         # 通知チャンネルと同じサーバーにのみ反応させる
           now = datetime.datetime.utcnow() + datetime.timedelta(hours=DIFF_JST_FROM_UTC)
           now_str = now.strftime('%Y-%m-%d %H:%M:%S')
