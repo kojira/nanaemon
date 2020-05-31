@@ -12,7 +12,7 @@ load_dotenv(dotenv_path)
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
-NOTICE_CHANNEL_ID = int(os.environ.get("NOTICE_CHANNEL_ID"))
+NOTICE_CHANNEL_IDS = os.environ.get("NOTICE_CHANNEL_IDS").split(",")
 DIFF_JST_FROM_UTC = 9
 
 class BotMain(commands.Bot):
@@ -23,18 +23,19 @@ class BotMain(commands.Bot):
         print('on ready.')
 
     async def on_voice_state_update(self, member, before, after):
-        channel = bot.get_channel(NOTICE_CHANNEL_ID)
-        guild = before.channel.guild if after.channel is None else after.channel.guild
-        if guild is channel.guild:
-        # 通知チャンネルと同じサーバーにのみ反応させる
-          now = datetime.datetime.utcnow() + datetime.timedelta(hours=DIFF_JST_FROM_UTC)
-          now_str = now.strftime('%Y-%m-%d %H:%M:%S')
-          if before.channel is None and after.channel:
-              await channel.send(f'{now_str} - {member.name} が{after.channel.name} に参加したよ。')
-          elif after.channel is None and before.channel:
-              await channel.send(f'{now_str} - {member.name} が{before.channel.name} から出たよ。')
-          elif after.channel is not before.channel:
-              await channel.send(f'{now_str} - {member.name} が{before.channel.name} から {after.channel.name}に移動したよ。')
+        for channel_str in NOTICE_CHANNEL_IDS:
+          channel = bot.get_channel(int(channel_str))
+          guild = before.channel.guild if after.channel is None else after.channel.guild
+          if guild is channel.guild:
+          # 通知チャンネルと同じサーバーにのみ反応させる
+            now = datetime.datetime.utcnow() + datetime.timedelta(hours=DIFF_JST_FROM_UTC)
+            now_str = now.strftime('%Y-%m-%d %H:%M:%S')
+            if before.channel is None and after.channel:
+                await channel.send(f'{now_str} - {member.name} が{after.channel.name} に参加したよ。')
+            elif after.channel is None and before.channel:
+                await channel.send(f'{now_str} - {member.name} が{before.channel.name} から出たよ。')
+            elif after.channel is not before.channel:
+                await channel.send(f'{now_str} - {member.name} が{before.channel.name} から {after.channel.name}に移動したよ。')
 
 
 bot = BotMain(['!', '！'])
